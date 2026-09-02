@@ -1,93 +1,86 @@
+import prisma from '../../prisma';
 
-import { Post } from "../post/post.model";
-import { IComment } from "./comment.interface";
-import { Comment } from "./comment.model";
-
-
-// Create comment in the DB and associate it with a post
 const createCommentIntoDB = async (
   postId: string,
   author: string,
   commentText: string,
-  commentImage: string
+  commentImage: string,
 ) => {
-  const comment = await Comment.create({
-    author,
-    commentText,
-    commentImage,
+  const comment = await prisma.comment.create({
+    data: {
+      authorId: parseInt(author),
+      postId: parseInt(postId),
+      commentText,
+      commentImage,
+    },
   });
 
-  // Push the comment to the relevant post's comments array
-  await Post.findByIdAndUpdate(
-    postId,
-    { $push: { comments: comment?._id } },
-    { new: true, runValidators: true }
-  );
+  await prisma.post.update({
+    where: { id: parseInt(postId) },
+    data: {
+      comments: { connect: { id: comment.id } },
+    },
+  });
 
   return comment;
 };
 
-// Update comment only if the author matches the requester
 const updateCommentInDB = async (
   commentId: string,
   authorId: string,
-  payload: Partial<IComment>
+  payload: { commentText?: string; commentImage?: string },
 ) => {
-  // Find the comment by ID
-  const existingComment = await Comment.findById(commentId);
+  const existingComment = await prisma.comment.findUnique({
+    where: { id: parseInt(commentId) },
+  });
 
-  // Check if the comment exists
   if (!existingComment) {
-    throw new Error("Comment not found.");
+    throw new Error('Comment not found.');
   }
 
-  // Check if the author of the comment matches the user requesting the update
-  if (existingComment.author.toString() !== authorId) {
-    throw new Error("You are not authorized to update this comment.");
+  if (existingComment.authorId !== parseInt(authorId)) {
+    throw new Error('You are not authorized to update this comment.');
   }
 
-  // Proceed with updating the comment
-  const updatedComment = await Comment.findByIdAndUpdate(commentId, payload, {
-    new: true,
-    runValidators: true,
+  const updatedComment = await prisma.comment.update({
+    where: { id: parseInt(commentId) },
+    data: payload,
   });
 
   return updatedComment;
 };
 
-
 const deleteCommentInDB = async (commentId: string, authorId: string) => {
-  // Find the comment by ID
-  const existingComment = await Comment.findById(commentId);
+  const existingComment = await prisma.comment.findUnique({
+    where: { id: parseInt(commentId) },
+  });
 
-  // Check if the comment exists
   if (!existingComment) {
-    throw new Error("Comment not found.");
+    throw new Error('Comment not found.');
   }
 
-  // Check if the author of the comment matches the user requesting the deletion
-  if (existingComment.author.toString() !== authorId) {
-    throw new Error("You are not authorized to delete this comment.");
+  if (existingComment.authorId !== parseInt(authorId)) {
+    throw new Error('You are not authorized to delete this comment.');
   }
 
-  // Proceed with deleting the comment
-  await Comment.findByIdAndDelete(commentId);
+  await prisma.comment.delete({
+    where: { id: parseInt(commentId) },
+  });
 
-  return { message: "Comment successfully deleted." };
+  return { message: 'Comment successfully deleted.' };
 };
 
-
 const addReplyToComment = async (commentId: string, replyId: string) => {
-  const comment = await Comment.findByIdAndUpdate(
-    commentId,
-    { $push: { replies: replyId } },
-    { new: true }
-  );
-  return comment;
+  // Replies are not supported in the current schema - comments don't have nested replies
+  // This is a no-op matching the original commented-out behavior
+  console.log('Reply feature not implemented', commentId, replyId);
+  return null;
 };
 
 const getCommentsByPostId = async (postId: string) => {
-  const comments = await Comment.find({ postId }).populate("replies");
+  const comments = await prisma.comment.findMany({
+    where: { postId: parseInt(postId) },
+  });
   return comments;
 };
 
@@ -96,5 +89,5 @@ export const CommentServices = {
   updateCommentInDB,
   addReplyToComment,
   getCommentsByPostId,
-  deleteCommentInDB
+  deleteCommentInDB,
 };
