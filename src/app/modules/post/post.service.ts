@@ -4,12 +4,15 @@ const createPostIntoDb = async (post: {
   title: string;
   content: string;
   image?: string[];
-  userId: number;
+  userId: string;
   category: string;
   isPremium?: boolean;
 }) => {
   const result = await prisma.post.create({
-    data: post,
+    data: {
+      ...post,
+      userId: parseInt(post.userId),
+    },
   });
   return result;
 };
