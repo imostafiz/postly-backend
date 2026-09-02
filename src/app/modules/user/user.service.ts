@@ -26,11 +26,12 @@ const createUserIntoDb = async (user: {
     config.jwt_access_secret as string,
     { expiresIn: config.jwt_access_expires_in },
   );
+  const { password: _, ...userWithoutPassword } = newUser;
   return {
     success: true,
-    statusCode: 200,
+    statusCode: 201,
     message: 'User is created successfully',
-    data: jwtPayload,
+    data: userWithoutPassword,
     token: accessToken,
   };
 };

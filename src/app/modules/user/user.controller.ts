@@ -6,7 +6,7 @@ import sendResponse from '../../utils/sendResponse';
 const createUser = catchAsync(async (req: Request, res: Response) => {
   const result = await UserServices.createUserIntoDb(req.body);
   console.log('result', result);
-  res.status(200).json({
+  res.status(result.statusCode || 201).json({
     success: result.success,
     statusCode: result.statusCode,
     message: result.message,
@@ -73,8 +73,8 @@ const getSingleUSer = catchAsync(async (req, res) => {
   const token = authHeader.split(' ')[1];
   const result = await UserServices.getSingleUSerFromDb(token);
   return res.status(200).json({
-    success: false,
-    statusCode: 401,
+    success: true,
+    statusCode: 200,
     message: 'your decoded info',
     data: result,
   });
@@ -93,8 +93,8 @@ const updatedUSer = catchAsync(async (req, res) => {
   const token = authHeader.split(' ')[1];
   const result = await UserServices.getUpdatedUser(token, payload);
   return res.status(200).json({
-    success: false,
-    statusCode: 401,
+    success: true,
+    statusCode: 200,
     message: 'your decoded updated info',
     data: result,
   });
