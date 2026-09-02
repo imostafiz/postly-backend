@@ -1,9 +1,10 @@
 import config from '../../config';
 import prisma from '../../prisma';
 import jwt from 'jsonwebtoken';
+import bcrypt from 'bcrypt';
 
 interface DecodedToken {
-  _id: number;
+  id: number;
 }
 
 const createUserIntoDb = async (user: {
@@ -13,13 +14,15 @@ const createUserIntoDb = async (user: {
   profileImage?: string;
   phone?: string;
   address?: string;
-  role?: 'user' | 'admin';
 }) => {
-  const newUser = await prisma.user.create({ data: user });
+  const hashedPassword = await bcrypt.hash(user.password, Number(config.bcrypt_salt_round));
+  const newUser = await prisma.user.create({
+    data: { ...user, password: hashedPassword },
+  });
   const jwtPayload = newUser;
 
   const accessToken = jwt.sign(
-    { _id: jwtPayload.id, email: jwtPayload.email, role: jwtPayload.role, name: jwtPayload.name } as object,
+    { id: jwtPayload.id, email: jwtPayload.email, role: jwtPayload.role, name: jwtPayload.name } as object,
     config.jwt_access_secret as string,
     { expiresIn: config.jwt_access_expires_in },
   );
@@ -95,7 +98,7 @@ const getSingleUSerFromDb = async (token: string) => {
   try {
     const decodedInfo = jwt.verify(token, config.jwt_access_secret as string) as DecodedToken;
     const result = await prisma.user.findUnique({
-      where: { id: decodedInfo._id },
+      where: { id: decodedInfo.id },
     });
     if (!result) {
       throw new Error('user not found');
@@ -109,7 +112,7 @@ const getSingleUSerFromDb = async (token: string) => {
 const getUpdatedUser = async (token: string, payload: Record<string, unknown>) => {
   try {
     const decodedInfo = jwt.verify(token, config.jwt_access_secret as string) as DecodedToken;
-    const userId = decodedInfo._id;
+    const userId = decodedInfo.id;
     const updatedUser = await prisma.user.update({
       where: { id: userId },
       data: payload,

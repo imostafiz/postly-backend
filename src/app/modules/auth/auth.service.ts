@@ -2,15 +2,20 @@ import config from '../../config';
 import { sendEmail } from '../../utils/sendEmail';
 import prisma from '../../prisma';
 import jwt, { JwtPayload } from 'jsonwebtoken';
+import bcrypt from 'bcrypt';
 
 const userLoginService = async (email: string, password: string) => {
-  const user = await prisma.user.findFirst({ where: { email, password } });
+  const user = await prisma.user.findUnique({ where: { email } });
   if (!user) {
-    return { success: false };
+    return { success: false, statusCode: 401, message: 'Invalid email or password' };
+  }
+  const isPasswordValid = await bcrypt.compare(password, user.password);
+  if (!isPasswordValid) {
+    return { success: false, statusCode: 401, message: 'Invalid email or password' };
   }
   const jwtPayload = user;
   const accessToken = jwt.sign(
-    { _id: jwtPayload.id, email: jwtPayload.email, role: jwtPayload.role, name: jwtPayload.name } as object,
+    { id: jwtPayload.id, email: jwtPayload.email, role: jwtPayload.role, name: jwtPayload.name } as object,
     config.jwt_access_secret as string,
     { expiresIn: config.jwt_access_expires_in },
   );
@@ -49,9 +54,10 @@ const resetPasswordIntoDb = async (
     config.jwt_access_secret as string,
   ) as JwtPayload;
   if (decoded) {
+    const hashedPassword = await bcrypt.hash(payload.newPassword, Number(config.bcrypt_salt_round));
     await prisma.user.update({
       where: { email: payload.email },
-      data: { password: payload.newPassword },
+      data: { password: hashedPassword },
     });
 
     return 'Password Updated';
