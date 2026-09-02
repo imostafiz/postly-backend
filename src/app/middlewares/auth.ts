@@ -17,7 +17,6 @@ const auth = (...requiredRole: TUserRole[]) => {
 
     const token = authHeader.split(' ')[1];
 
-    // Check if the token is valid
     jwt.verify(token, config.jwt_access_secret as string, (err, decoded) => {
       if (err) {
         return res.status(401).json({
@@ -42,5 +41,3 @@ const auth = (...requiredRole: TUserRole[]) => {
 };
 
 export default auth;
-
-
