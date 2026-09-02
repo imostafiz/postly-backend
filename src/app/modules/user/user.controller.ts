@@ -5,6 +5,7 @@ import sendResponse from '../../utils/sendResponse';
 
 const createUser = catchAsync(async (req: Request, res: Response) => {
   const result = await UserServices.createUserIntoDb(req.body);
+  console.log('result', result);
   res.status(200).json({
     success: result.success,
     statusCode: result.statusCode,
@@ -39,7 +40,7 @@ const updateUser = catchAsync(async (req: Request, res: Response) => {
 
 const deleteUser = catchAsync(async (req: Request, res: Response) => {
   const userId = req.params.id;
-  console.log("userId",userId);
+  console.log('userId', userId);
   const result = await UserServices.deleteUserFromDb(userId);
   sendResponse(res, {
     statusCode: 200,
