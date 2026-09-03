@@ -20,6 +20,10 @@ const moduleRoute = [
     router: UserRouter,
   },
   {
+    path:'/api/post/favorite',
+    router:FavoritePostRouter
+  },
+  {
     path: '/api/post',
     router: PostRouter,
   },
@@ -35,11 +39,6 @@ const moduleRoute = [
     path: "/api/dislikes",
     router: DisLikeRoutes,
   },
-  {
-    path:'/api/post/favorite',
-    router:FavoritePostRouter
-  }
-  ,
   {
     path:'/api/payment',
     router:PaymentRouters
