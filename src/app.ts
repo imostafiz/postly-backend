@@ -13,7 +13,7 @@ app.use(cors());
 app.use('/',router)
 
 const getAController = (req: Request, res: Response) => {
-  res.send('Gardening tricks and tips platform backend server is running.');
+  res.send('Postly social media platform backend server is running.');
 };
 
 
