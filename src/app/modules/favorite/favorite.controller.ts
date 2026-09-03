@@ -21,14 +21,14 @@ const createFavorite = catchAsync(async (req, res) => {
 });
 
 const getAllFavorite = catchAsync(async (req, res) => {
-  const { userId } = req.body;
+  const { userId } = req.params;
 
   const result = await FavoriteServices.getAllFavoriteFromDB(userId);
 
-  if (!result) {
-    sendResponse(res, {
+  if (!result || result.length === 0) {
+    return sendResponse(res, {
       statusCode: 404,
-      success: true,
+      success: false,
       message: "not found favorite posts",
       data: result,
     });

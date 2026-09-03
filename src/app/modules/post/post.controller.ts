@@ -15,11 +15,11 @@ const createPost = catchAsync(async (req: Request, res: Response) => {
 
 const getAllPost = catchAsync(async (req: Request, res: Response) => {
 
-  const { search, filter } = req.query;
+  const { search, sortBy } = req.query;
 
   const result = await PostService.getAllPostFromDb(
     search as string,
-    filter as string
+    sortBy as string
   );
     sendResponse(res, {
     statusCode: 200,

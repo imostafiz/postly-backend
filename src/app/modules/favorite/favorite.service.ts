@@ -1,56 +1,50 @@
-import { User } from "../user/user.model";
-import Favorite from "./favorite.model";
+import prisma from '../../prisma';
 
-
-// Create Favorite Service
 const createFavoriteIntoDB = async (user: string, post: string) => {
-  // Check if the favorite already exists for this user and post
-  const existingFavorite = await Favorite.findOne({ user, post });
-
-  if (existingFavorite) {
-    throw new Error("Already saved this post");
-  }
-
-  // Create a new favorite if it doesn't exist
-  const favorite = await Favorite.create({
-    user,
-    post,
+  const existingFavorite = await prisma.favorite.findFirst({
+    where: { userId: parseInt(user), postId: parseInt(post) },
   });
 
-  // Push the new favorite ID into the user's favorites array
-  await User.findByIdAndUpdate(
-    user,
-    { $push: { favorites: favorite._id } },
-    { new: true, runValidators: true }
-  );
+  if (existingFavorite) {
+    throw new Error('Already saved this post');
+  }
+
+  const favorite = await prisma.favorite.create({
+    data: {
+      userId: parseInt(user),
+      postId: parseInt(post),
+    },
+  });
 
   return favorite;
 };
 
-
-
 const getAllFavoriteFromDB = async (userId: string) => {
-  const result = await Favorite.find({ user: userId }).populate("post");
-  return result;
-};
-
-// Delete Favorite Service
-const deleteFavoriteFromDB = async (userId: string, postId: string) => {
-  const result = await Favorite.findOneAndDelete({
-    user: userId,
-    post: postId,
+  const result = await prisma.favorite.findMany({
+    where: { userId: parseInt(userId) },
+    include: { post: true },
   });
   return result;
 };
 
-
-const getAllMyFavoriteFromDB = async (userId: string) => {
-  const result = await Favorite.find({ user: userId }).populate("post");
+const deleteFavoriteFromDB = async (userId: string, postId: string) => {
+  const result = await prisma.favorite.deleteMany({
+    where: { userId: parseInt(userId), postId: parseInt(postId) },
+  });
   return result;
 };
+
+const getAllMyFavoriteFromDB = async (userId: string) => {
+  const result = await prisma.favorite.findMany({
+    where: { userId: parseInt(userId) },
+    include: { post: true },
+  });
+  return result;
+};
+
 export const FavoriteServices = {
   createFavoriteIntoDB,
   deleteFavoriteFromDB,
   getAllFavoriteFromDB,
-  getAllMyFavoriteFromDB
+  getAllMyFavoriteFromDB,
 };

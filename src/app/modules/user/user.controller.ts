@@ -2,11 +2,11 @@ import catchAsync from '../../utils/catchAsync';
 import { Request, Response } from 'express';
 import { UserServices } from './user.service';
 import sendResponse from '../../utils/sendResponse';
-import { date } from 'joi';
 
 const createUser = catchAsync(async (req: Request, res: Response) => {
   const result = await UserServices.createUserIntoDb(req.body);
-  res.status(200).json({
+  console.log('result', result);
+  res.status(result.statusCode || 201).json({
     success: result.success,
     statusCode: result.statusCode,
     message: result.message,
@@ -40,7 +40,7 @@ const updateUser = catchAsync(async (req: Request, res: Response) => {
 
 const deleteUser = catchAsync(async (req: Request, res: Response) => {
   const userId = req.params.id;
-  console.log("userId",userId);
+  console.log('userId', userId);
   const result = await UserServices.deleteUserFromDb(userId);
   sendResponse(res, {
     statusCode: 200,
@@ -73,8 +73,8 @@ const getSingleUSer = catchAsync(async (req, res) => {
   const token = authHeader.split(' ')[1];
   const result = await UserServices.getSingleUSerFromDb(token);
   return res.status(200).json({
-    success: false,
-    statusCode: 401,
+    success: true,
+    statusCode: 200,
     message: 'your decoded info',
     data: result,
   });
@@ -93,8 +93,8 @@ const updatedUSer = catchAsync(async (req, res) => {
   const token = authHeader.split(' ')[1];
   const result = await UserServices.getUpdatedUser(token, payload);
   return res.status(200).json({
-    success: false,
-    statusCode: 401,
+    success: true,
+    statusCode: 200,
     message: 'your decoded updated info',
     data: result,
   });

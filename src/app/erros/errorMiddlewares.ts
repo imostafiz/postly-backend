@@ -19,10 +19,11 @@ const errorMiddleware = (err: any, req: Request, res: Response, next: NextFuncti
     statusCode = 400;
     message = 'Cast Error';
     errorMessages = [{ path: err.path, message: 'Invalid ID format' }];
-  } else if (err.code === 11000) {
+  } else if (err.code === 11000 || err.code === 'P2002') {
     statusCode = 400;
     message = 'Duplicate Entry';
-    errorMessages = [{ path: '', message: err.message }];
+    const target = err.meta?.target ? ` (${err.meta.target.join(', ')})` : '';
+    errorMessages = [{ path: '', message: `A record with this value already exists${target}` }];
   } else if (err instanceof ZodError) {
     statusCode = 400;
     message = 'Validation Error';
